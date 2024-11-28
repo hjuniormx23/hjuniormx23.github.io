@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DALOO</title>
+    <style>
+        /* Estilo General */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d87f0;
+            margin-top: 50px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            text-align: center;
+            color: #444;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Formulario */
+        #formulario-trabajadores {
+            background-color: #fff;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #formulario-trabajadores label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        #formulario-trabajadores input[type="number"],
+        #formulario-trabajadores input[type="text"],
+        #formulario-trabajadores select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        #formulario-trabajadores button {
+            background-color: #2d87f0;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #formulario-trabajadores button:hover {
+            background-color: #1e6cd4;
+        }
+
+        /* Calendario */
+        .calendario-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .calendario {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #2d87f0;
+            color: #fff;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        td input {
+            width: 20px;
+            height: 20px;
+        }
+
+        td table {
+            width: 100%;
+            margin: 0;
+            border: none;
+            background-color: transparent;
+        }
+
+        td table td {
+            padding: 5px 0;
+        }
+
+        td table td input {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Totales */
+        .total {
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #total-trabajadores {
+            font-size: 1.2rem;
+            color: #444;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CALCULADOR DE DÍAS PARA TRABAJADORES</h1>
+    
+    <div id="formulario-trabajadores">
+        <label for="numero-trabajadores">Número de Trabajadores: </label>
+        <input type="number" id="numero-trabajadores" min="1" max="10" value="1" onchange="actualizarFormularioTrabajadores()">
+        <div id="trabajadores-lista"></div>
+        <button onclick="generarCalendario()">Generar Calendario</button>
+    </div>
+    
+    <div class="calendario-container">
+        <label for="mes-select">Selecciona el mes: </label>
+        <select id="mes-select" onchange="mostrarCalendario()">
+            <option value="">--Seleccionar Mes--</option>
+        </select>
+    </div>
+
+    <div id="calendario"></div>
+
+    <div class="total">
+        <h2>Total de Días Trabajados</h2>
+        <div id="total-trabajadores"></div>
+    </div>
+    <div id="formulario-trabajadores" ></divid>
+        <button onclick="window.location.href='Principal.html';" >Regreso al Inicio</button>
+        
+    </div>
+
+    <script>
+        const meses = [
+            { nombre: "Enero", dias: 31 },
+            { nombre: "Febrero", dias: 29 },
+            { nombre: "Marzo", dias: 31 },
+            { nombre: "Abril", dias: 30 },
+            { nombre: "Mayo", dias: 31 },
+            { nombre: "Junio", dias: 30 },
+            { nombre: "Julio", dias: 31 },
+            { nombre: "Agosto", dias: 31 },
+            { nombre: "Septiembre", dias: 30 },
+            { nombre: "Octubre", dias: 31 },
+            { nombre: "Noviembre", dias: 30 }
+        ];
+
+        let trabajadores = [];
+
+        function actualizarFormularioTrabajadores() {
+            const numeroTrabajadores = document.getElementById('numero-trabajadores').value;
+            const listaTrabajadores = document.getElementById('trabajadores-lista');
+            listaTrabajadores.innerHTML = '';
+            trabajadores = [];
+
+            for (let i = 1; i <= numeroTrabajadores; i++) {
+                const label = document.createElement('label');
+                label.setAttribute('for', 'trabajador' + i);
+                label.textContent = `Trabajador ${i}: `;
+                
+                const input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', 'trabajador' + i);
+                input.setAttribute('placeholder', `Nombre del Trabajador ${i}`);
+                
+                listaTrabajadores.appendChild(label);
+                listaTrabajadores.appendChild(input);
+                listaTrabajadores.appendChild(document.createElement('br'));
+
+                trabajadores.push({ nombre: '', diasTrabajados: [], turnoMatutino: [], turnoVespertino: [] });
+            }
+        }
+
+        function generarCalendario() {
+            const numeroTrabajadores = document.getElementById('numero-trabajadores').value;
+
+            for (let i = 1; i <= numeroTrabajadores; i++) {
+                const trabajador = document.getElementById('trabajador' + i).value;
+                if (!trabajador) {
+                    alert(`Por favor, ingresa el nombre del Trabajador ${i}.`);
+                    return;
+                }
+                trabajadores[i-1].nombre = trabajador;
+                trabajadores[i-1].diasTrabajados = new Array(meses.length).fill(0);
+                trabajadores[i-1].turnoMatutino = new Array(meses.length).fill(0);
+                trabajadores[i-1].turnoVespertino = new Array(meses.length).fill(0);
+            }
+
+            const mesSelect = document.getElementById('mes-select');
+            meses.forEach((mes, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = mes.nombre;
+                mesSelect.appendChild(option);
+            });
+
+            mostrarCalendario();
+        }
+
+        function obtenerPrimerDiaDelMes(mesIndex) {
+            const fecha = new Date(2024, mesIndex, 1);
+            return fecha.getDay();
+        }
+
+        function mostrarCalendario() {
+            const mesSelect = document.getElementById('mes-select');
+            const mesIndex = mesSelect.value;
+            if (mesIndex === "") {
+                return;
+            }
+
+            const mes = meses[mesIndex];
+            const calendarioDiv = document.getElementById('calendario');
+            calendarioDiv.innerHTML = '';
+
+            calendarioDiv.innerHTML += `<h2>${mes.nombre} 2024</h2>`;
+            calendarioDiv.innerHTML += crearTablaMes(mes.nombre, mes.dias, mesIndex);
+        }
+
+        function crearTablaMes(mes, dias, mesIndex) {
+            let tabla = `<table id="${mes}">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Día de la Semana</th>`;
+            trabajadores.forEach(trabajador => {
+                tabla += `<th>${trabajador.nombre}</th>`;
+            });
+
+            tabla += `</tr></thead><tbody>`;
+
+            let diaSemana = obtenerPrimerDiaDelMes(mesIndex);
+            for (let dia = 1; dia <= dias; dia++) {
+                const fecha = `${dia < 10 ? '0' : ''}${dia}/2024`;
+                const nombreDia = obtenerNombreDia(diaSemana);
+                tabla += `<tr>
+                    <td>${fecha}</td>
+                    <td>${nombreDia}</td>`;
+
+                for (let i = 0; i < trabajadores.length; i++) {
+                    tabla += `
+                        <td>
+                            <table>
+                                <tr><td>Matutino</td><td><input type="checkbox" class="trabajador${i + 1}-matutino" onchange="actualizarTotales(${i}, ${mesIndex}, 'matutino')"></td></tr>
+                                <tr><td>Vespertino</td><td><input type="checkbox" class="trabajador${i + 1}-vespertino" onchange="actualizarTotales(${i}, ${mesIndex}, 'vespertino')"></td></tr>
+                            </table>
+                        </td>
+                    `;
+                }
+
+                tabla += `</tr>`;
+                diaSemana++;
+                if (diaSemana > 6) diaSemana = 0;
+            }
+
+            tabla += `</tbody></table><br>`;
+            return tabla;
+        }
+
+        function obtenerNombreDia(dia) {
+            switch (dia) {
+                case 0: return "Domingo";
+                case 1: return "Lunes";
+                case 2: return "Martes";
+                case 3: return "Miércoles";
+                case 4: return "Jueves";
+                case 5: return "Viernes";
+                case 6: return "Sábado";
+            }
+        }
+
+        function actualizarTotales(trabajadorIndex, mesIndex, turno) {
+            const checkboxesMatutino = document.querySelectorAll(`#${meses[mesIndex].nombre} .trabajador${trabajadorIndex + 1}-matutino`);
+            const checkboxesVespertino = document.querySelectorAll(`#${meses[mesIndex].nombre} .trabajador${trabajadorIndex + 1}-vespertino`);
+
+            let totalMatutino = 0;
+            let totalVespertino = 0;
+
+            checkboxesMatutino.forEach(checkbox => {
+                if (checkbox.checked) totalMatutino++;
+            });
+            checkboxesVespertino.forEach(checkbox => {
+                if (checkbox.checked) totalVespertino++;
+            });
+
+            trabajadores[trabajadorIndex].turnoMatutino[mesIndex] = totalMatutino;
+            trabajadores[trabajadorIndex].turnoVespertino[mesIndex] = totalVespertino;
+
+            mostrarTotales();
+        }
+
+        function mostrarTotales() {
+            let totalHTML = '';
+            trabajadores.forEach((trabajador, index) => {
+                const totalDiasMatutino = trabajador.turnoMatutino.reduce((a, b) => a + b, 0);
+                const totalDiasVespertino = trabajador.turnoVespertino.reduce((a, b) => a + b, 0);
+                totalHTML += `${trabajador.nombre}: Matutino: ${totalDiasMatutino} días, Vespertino: ${totalDiasVespertino} días<br>`;
+            });
+            document.getElementById("total-trabajadores").innerHTML = totalHTML;
+        }
+    </script>
+</body>
+</html>
